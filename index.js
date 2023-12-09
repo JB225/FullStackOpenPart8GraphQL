@@ -24,13 +24,8 @@ let authors = [
   { 
     name: 'Sandi Metz', // birthyear not known
     id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
-  },
+  }
 ]
-
-/*
- * It might make more sense to associate a book with its author by storing the author's id in the context of the book instead of the author's name
- * However, for simplicity, we will store the author's name in connection with the book
-*/
 
 let books = [
   {
@@ -89,14 +84,40 @@ let books = [
 */
 
 const typeDefs = `
+  type Author {
+    name: String!
+    id: ID!
+    born: Int
+    bookCount: Int
+  }
+
+  type Book {
+    title: String!
+    published: Int!
+    author: String!
+    id: ID!
+    genres: [String!]!
+  }
+
   type Query {
-    dummy: Int
+    bookCount: Int!
+    authorCount: Int!
+    allAuthors: [Author!]!
+    allBooks: [Book!]!
   }
 `
 
 const resolvers = {
   Query: {
-    dummy: () => 0
+    authorCount: () => authors.length,
+    bookCount: () => books.length,
+    allAuthors: () => authors,
+    allBooks: () => books
+  },
+  Author: {
+    bookCount: (root) => {
+      return books.filter(b => b.author === root.name).length
+    }
   }
 }
 

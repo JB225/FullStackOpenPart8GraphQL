@@ -4,7 +4,7 @@
   "description": "Part 8 of the Full Stack Open MOOC course focusing on GraphQL.",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "start": "node index.js"
   },
   "dependencies": {
     "@apollo/server": "^4.9.5",
