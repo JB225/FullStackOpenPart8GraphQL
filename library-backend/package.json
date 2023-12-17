@@ -1,0 +1,16 @@
+{
+  "name": "part8graphql",
+  "version": "1.0.0",
+  "description": "Part 8 of the Full Stack Open MOOC course focusing on GraphQL.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
