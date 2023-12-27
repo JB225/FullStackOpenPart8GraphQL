@@ -1,6 +1,6 @@
+const { GraphQLError } = require('graphql')
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
-const { v1: uuid } = require('uuid')
 const config = require('./utils/config')
 
 const Book = require('./models/book')
@@ -34,11 +34,22 @@ const typeDefs = `
     genres: [String!]!
   }
 
+  type User {
+    username: String!
+    favoriteGenre: String!
+    id: ID!
+  }
+  
+  type Token {
+    value: String!
+  }
+
   type Query {
     bookCount: Int!
     authorCount: Int!
     allAuthors: [Author!]!
     allBooks(author: String, genre: String): [Book!]!
+    me: User
   }
 
   type Mutation {
@@ -55,52 +66,97 @@ const typeDefs = `
     editAuthor(
       name: String!
       setBornTo: Int!
-    ): Author
+    ): Author,
+    createUser(
+      username: String!
+      favoriteGenre: String!
+    ): User,
+    login(
+      username: String!
+      password: String!
+    ): Token
   }
 `
 
 const resolvers = {
   Query: {
-    authorCount: () => Author.collection.countDocuments,
-    bookCount: () => Book.collection.countDocuments,
-    allAuthors: async () => { Author.find({}) },
-    allBooks: (root, args) =>  {
-      return books
-        .filter(b => args.author == null || b.author === args.author)
-        .filter(b => args.genre == null || b.genres.includes(args.genre))
+    authorCount: async () => Author.collection.countDocuments(),
+    bookCount: async () => Book.collection.countDocuments(),
+    allAuthors: async () => {
+      return Author.find({})
+    },
+    allBooks: async (root, args) =>  {
+      if (!args.author && !args.genre) {
+        return Book.find({})
+      }
+
+      if (args.author) {
+        const author = await Author.findOne({ name: { $eq: args.author } })
+        return Book.find({ author: {$eq: author._id }})
+      }
+
+      return Book.find({ genres: args.genre })
     }
   },
   Author: {
-    bookCount: (root) => {
-      return books.filter(b => b.author === root.name).length
+    bookCount: async (root) => {
+      const author = await Author.findOne({ name: { $eq: root.name } })
+      return Book.find({ author: {$eq: author._id }}).countDocuments()
+    }
+  },
+  Book: {
+    author: async (root) => {
+      return Author.findOne({ _id: root.author })
     }
   },
   Mutation: {
-    addBook: (root, args) => {
-      const book = { ...args, id: uuid() }
-      if (!authors.map(a => a.name).includes(args.author)) {
-        const author = { name: args.author, id: uuid() }
-        authors = authors.concat(author)      
+    addBook: async (root, args) => {
+      let authorObj = await Author.findOne({ name: {$eq: args.author } })
+      if (!authorObj) {
+        authorObj = new Author({ name: args.author })
+        authorObj.save()
       }
-      books = books.concat(book)
+
+      const book = new Book({ ...args, author: authorObj })
+
+      try {
+        await book.save()
+      } catch (error) {
+        throw new GraphQLError('Saving book failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.title,
+            error
+          }
+        })
+      }
+
       return book
     },
-    addAuthor: (root, args) => {
-      const author = new Author({ ...args })
-      return author.save()
+    addAuthor: async (root, args) => {
+      const author = new Author({ ...args})
+      
+      try {
+        await author.save()
+      } catch (error) {
+        throw new GraphQLError('Saving author failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.name,
+            error
+          }
+        })
+      }
 
-      // const author = { ...args, id: uuid() }
-      // authors = authors.concat(author)
-      // return author
+      return author
     },
-    editAuthor: (root, args) => {
-      const author = authors.find(a => a.name === args.name)
+    editAuthor: async (root, args) => {
+      const author = await Author.findOne({ name: args.name })
       if (!author) {
         return null
       }
-      const updatedAuthor = {...author, born: args.setBornTo}
-      authors = authors.map(a => a.name === args.name ? updatedAuthor : a)
-      return updatedAuthor
+      author.born = args.setBornTo
+      return author.save()
     }
   }
 }
