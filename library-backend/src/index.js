@@ -2,9 +2,11 @@ const { GraphQLError } = require('graphql')
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const config = require('./utils/config')
+const jwt = require('jsonwebtoken')
 
 const Book = require('./models/book')
 const Author = require('./models/author')
+const User = require('./models/user')
 const mongoose = require('mongoose')
 
 console.log('connecting to', config.MONGODB_URI)
@@ -96,7 +98,8 @@ const resolvers = {
       }
 
       return Book.find({ genres: args.genre })
-    }
+    },
+    me: async (root, args, context) => context.currentUser
   },
   Author: {
     bookCount: async (root) => {
@@ -157,6 +160,38 @@ const resolvers = {
       }
       author.born = args.setBornTo
       return author.save()
+    },
+    createUser: async (root, args) => {
+      const user = new User({ username: args.username, favoriteGenre: args.favoriteGenre })
+
+      return user.save()
+        .catch(error => {
+          throw new GraphQLError('Creating the user failed', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: [args.username, args.favoriteGenre],
+              error
+            }
+          })
+        })
+    },
+    login: async (root, args) => {
+      const user = await User.findOne({ username: args.username })
+
+      if (!user || args.password !== '1111') {
+        throw new GraphQLError('wrong credentials', {
+          extensions: {
+            code: 'BAD_USER_INPUT'
+          }
+        })
+      }
+
+      const userForToken = {
+        username: user.username,
+        id: user._id
+      }
+
+      return { value: jwt.sign(userForToken, config.JWT_SECRET) }
     }
   }
 }
@@ -168,6 +203,15 @@ const server = new ApolloServer({
 
 startStandaloneServer(server, {
   listen: { port: config.PORT },
+  context: async ({ req }) => {
+    const auth = req ? req.headers.authorization : null
+    if (auth && auth.startsWith('Bearer ')) {
+      const decodedToken = jwt.verify(
+        auth.substring(7), config.JWT_SECRET )
+      const currentUser = await User.findById(decodedToken.id)
+      return { currentUser }
+    }
+  }
 }).then(({ url }) => {
   console.log(`Server ready at ${url}`)
 })
