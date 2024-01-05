@@ -1,5 +1,6 @@
 import { gql, useMutation } from '@apollo/client'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const LOGIN = gql`
     mutation Login($username: String!, $password: String!) {
@@ -12,6 +13,8 @@ const Login = ({setToken, setError}) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
+  const navigate = useNavigate()
+
   const [ login, result ] = useMutation(LOGIN, {
     onError: (error) => {
       setError(error.graphQLErrors[0].message)
@@ -23,6 +26,7 @@ const Login = ({setToken, setError}) => {
       const token = result.data.login.value
       setToken(token)
       localStorage.setItem('user-token', token)
+      navigate('/authors')
     }
   }, [result.data])
 

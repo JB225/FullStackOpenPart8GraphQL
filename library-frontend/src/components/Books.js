@@ -31,7 +31,6 @@ const Books = () => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {console.log(books.data.allBooks)}
           {books.data.allBooks.map((a) => (
             <tr key={a.title}>
               <td>{a.title}</td>
