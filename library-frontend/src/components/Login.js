@@ -1,6 +1,7 @@
 import { gql, useMutation } from '@apollo/client'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Notification from './Notification'
 
 const LOGIN = gql`
     mutation Login($username: String!, $password: String!) {
@@ -9,16 +10,18 @@ const LOGIN = gql`
         }
     }`
 
-const Login = ({setToken, setError}) => {
+const Login = ({setToken}) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMessage, setError] = useState(null)
+
 
   const navigate = useNavigate()
 
   const [ login, result ] = useMutation(LOGIN, {
     onError: (error) => {
       setError(error.graphQLErrors[0].message)
-    }
+      setTimeout(() => { setError(null)}, 2000) }
   })
 
   useEffect(() => {
@@ -41,6 +44,7 @@ const Login = ({setToken, setError}) => {
   return (
     <div>
       <br></br>
+      <Notification message={errorMessage}/>
       <form onSubmit={submit}>
         <div>
             Username: 
