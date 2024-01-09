@@ -4,19 +4,25 @@ import NewBook from './components/NewBook'
 import Login from './components/Login'
 import { BrowserRouter as Router, 
   Routes, Route, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useApolloClient } from '@apollo/client'
 
 const App = () => {
   const [token, setToken] = useState(null)
   const client = useApolloClient()
 
+  useEffect(() => { 
+    const loggedUserToken = window.localStorage.getItem('user-token')
+    if (loggedUserToken) {
+      setToken(loggedUserToken)
+    }
+  }, [])
+
   const logoutHandler = () => {
     setToken(null)
     localStorage.clear()
     client.resetStore()
   }
-
 
   return (
     <Router>

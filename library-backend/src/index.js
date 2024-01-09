@@ -120,7 +120,7 @@ const resolvers = {
         authorObj.save()
       }
 
-      const book = new Book({ ...args, author: authorObj })
+      const book = new Book({ ...args, author: authorObj._id })
 
       try {
         await book.save()

@@ -23,11 +23,6 @@ const client = new ApolloClient({
   link: authLink.concat(httpLink)
 })
 
-// const client = new ApolloClient({
-//   uri: 'http://localhost:4000',
-//   cache: new InMemoryCache
-// })
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <ApolloProvider client={client}>
     <App />
