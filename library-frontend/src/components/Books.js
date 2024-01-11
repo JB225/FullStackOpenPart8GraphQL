@@ -15,14 +15,14 @@ query {
 
 const Books = () => {
 
-  const [filter, setFilter] = useState('')
+  const [filter, setFilter] = useState('all')
   const genres = new Set([])
   const books = useQuery(ALL_BOOKS)
 
   const filterBooks = (event) => {
     event.preventDefault()
     if (event.target.id === 'all') {
-      setFilter('')
+      setFilter('all')
     } else {
       setFilter(event.target.id)
     }
@@ -35,7 +35,8 @@ const Books = () => {
   return (
     <div>
       <h2>books</h2>
-
+      in genre <b>{filter}</b>
+      <br></br>
       <table>
         <tbody>
           <tr>
@@ -44,7 +45,7 @@ const Books = () => {
             <th>published</th>
           </tr>
           {books.data.allBooks.map((a) => {
-            if (filter === '' || a.genres.includes(filter)) {
+            if (filter === 'all' || a.genres.includes(filter)) {
               return <tr key={a.title}>
                 <td>{a.title}</td>
                 <td>{a.author.name}</td>
