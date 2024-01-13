@@ -2,33 +2,42 @@ import { gql, useQuery } from '@apollo/client'
 import { useState } from 'react'
 
 const ALL_BOOKS = gql`
-query {
-  allBooks {
+query AllBooks($genre: String) {
+  allBooks(genre: $genre) {
+    title
     author {
       name
-    },
-    genres,
-    published,
-    title
-  } 
+    }
+    genres
+    published
+  }
+}`
+
+const ALL_GENRES = gql`
+query AllBooks {
+  allBooks {
+    genres
+  }
 }`
 
 const Books = () => {
 
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('')
   const genres = new Set([])
-  const books = useQuery(ALL_BOOKS)
+  const allGenres = useQuery(ALL_GENRES)
+  const books = useQuery(ALL_BOOKS, { variables: { genre: filter } })
+
 
   const filterBooks = (event) => {
     event.preventDefault()
     if (event.target.id === 'all') {
-      setFilter('all')
+      setFilter('')
     } else {
       setFilter(event.target.id)
     }
   }
 
-  if (books.loading) {
+  if (books.loading || allGenres.loading) {
     return (<div>loading...</div>)
   }
 
@@ -45,18 +54,18 @@ const Books = () => {
             <th>published</th>
           </tr>
           {books.data.allBooks.map((a) => {
-            if (filter === 'all' || a.genres.includes(filter)) {
-              return <tr key={a.title}>
-                <td>{a.title}</td>
-                <td>{a.author.name}</td>
-                <td>{a.published}</td>
-              </tr>
-            }
+            // if (filter === 'all' || a.genres.includes(filter)) {
+            return <tr key={a.title}>
+              <td>{a.title}</td>
+              <td>{a.author.name}</td>
+              <td>{a.published}</td>
+            </tr>
+            // }
           })}
         </tbody>
       </table>
       <br></br>
-      {books.data.allBooks.map((a) => (
+      {allGenres.data.allBooks.map((a) => (
         a.genres.map(g => {
           if (!genres.has(g)) {
             genres.add(g)

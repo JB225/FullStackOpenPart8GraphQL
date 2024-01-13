@@ -15,7 +15,6 @@ const Login = ({setToken}) => {
   const [password, setPassword] = useState('')
   const [errorMessage, setError] = useState(null)
 
-
   const navigate = useNavigate()
 
   const [ login, result ] = useMutation(LOGIN, {
