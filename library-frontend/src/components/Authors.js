@@ -1,21 +1,7 @@
-import { gql, useMutation, useQuery } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { useState } from 'react'
-
-const ALL_AUTHORS = gql`
-query {
-  allAuthors {
-    name,
-    bookCount,
-    born
-  }
-}`
-
-const UPDATE_BORN = gql`mutation ($name: String!, $setBornTo: Int!) {
-  editAuthor(name: $name, setBornTo: $setBornTo) {
-    name,
-    born
-  }
-}`
+import { ALL_AUTHORS } from '../graphql/queries'
+import { UPDATE_BORN } from '../graphql/mutations'
 
 const Authors = () => {
   const [name, setName] = useState('')

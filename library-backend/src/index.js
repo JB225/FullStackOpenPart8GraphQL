@@ -66,7 +66,7 @@ const start = async () => {
         }}}))
 
   httpServer.listen(config.PORT, () => 
-    console.log(`Server is now running on http://localhost:${config.port}`)
+    console.log(`Server is now running on http://localhost:${config.PORT}`)
   )
 
 }

@@ -1,14 +1,8 @@
-import { gql, useMutation } from '@apollo/client'
+import { useMutation } from '@apollo/client'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Notification from './Notification'
-
-const LOGIN = gql`
-    mutation Login($username: String!, $password: String!) {
-        login(username: $username, password: $password) {
-            value
-        }
-    }`
+import { LOGIN } from '../graphql/mutations'
 
 const Login = ({setToken}) => {
   const [username, setUsername] = useState('')

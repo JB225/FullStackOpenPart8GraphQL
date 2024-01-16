@@ -7,11 +7,29 @@ import Login from './components/Login'
 import { BrowserRouter as Router, 
   Routes, Route, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { useApolloClient } from '@apollo/client'
+import { useApolloClient, useSubscription } from '@apollo/client'
+import { ALL_BOOKS, BOOK_ADDED } from './graphql/queries'
 
 const App = () => {
   const [token, setToken] = useState(null)
   const client = useApolloClient()
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data, client }) => {
+      console.log()
+      window.alert('A new book has been added')
+
+      const bookAdded = data.data.bookAdded
+      console.log(data)
+      console.log(bookAdded)
+
+      client.cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
+        return {
+          allBooks: allBooks.concat(bookAdded)
+        }
+      })
+    }
+  })
 
   useEffect(() => { 
     const loggedUserToken = window.localStorage.getItem('user-token')
