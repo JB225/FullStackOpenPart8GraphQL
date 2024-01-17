@@ -10,6 +10,22 @@ import { useEffect, useState } from 'react'
 import { useApolloClient, useSubscription } from '@apollo/client'
 import { ALL_BOOKS, BOOK_ADDED } from './graphql/queries'
 
+export const updateCache = (cache, query, addedBook) => {
+  const uniqByName = (a) => {
+    let seen = new Set()
+    return a.filter((item) => {
+      let k = item.name
+      return seen.has(k) ? false : seen.add(k)
+    })
+  }
+  
+  cache.updateQuery(query, ({ allBooks }) => {
+    return {
+      allPersons: uniqByName(allBooks.concat(addedBook)),
+    }
+  })
+}
+
 const App = () => {
   const [token, setToken] = useState(null)
   const client = useApolloClient()
@@ -23,11 +39,16 @@ const App = () => {
       console.log(data)
       console.log(bookAdded)
 
-      client.cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
-        return {
-          allBooks: allBooks.concat(bookAdded)
-        }
-      })
+      console.log('Cache', client.cache)
+
+      updateCache(client.cache, { query: ALL_BOOKS, variables: { genre: '' } }, bookAdded)
+
+      // client.cache.updateQuery({ query: ALL_BOOKS, variables: { genre: '' } }, ({ allBooks }) => {
+      //   console.log('DATA', allBooks)
+      //   return {
+      //     allBooks: allBooks.concat(bookAdded)
+      //   }
+      // })
     }
   })
 

@@ -9,7 +9,6 @@ const Books = () => {
   const allGenres = useQuery(ALL_GENRES)
   const books = useQuery(ALL_BOOKS, { variables: { genre: filter } })
 
-
   const filterBooks = (event) => {
     event.preventDefault()
     if (event.target.id === 'all') {

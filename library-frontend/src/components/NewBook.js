@@ -12,7 +12,7 @@ const NewBook = () => {
 
   const [createBook] = useMutation(CREATE_BOOK, 
     { update: (cache, response) => { 
-      cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
+      cache.updateQuery({ query: ALL_BOOKS, variables: { genre: '' } }, ({ allBooks }) => {
         return {
           allBooks: allBooks.concat(response.data.addBook)
         }
