@@ -14,7 +14,12 @@ mutation($title: String!, $published: Int!, $author: String!, $genres: [String!]
     published: $published, 
     author: $author, 
     genres: $genres) {
-    title
+      title
+      published
+      genres
+      author {
+        name
+      }
   }
 }`
 

@@ -2,6 +2,7 @@ import { useMutation } from '@apollo/client'
 import { useState } from 'react'
 import { ALL_BOOKS } from '../graphql/queries'
 import { CREATE_BOOK } from '../graphql/mutations'
+import { uniqByTitle } from '../utils/utilityMethods'
 
 const NewBook = () => {
   const [title, setTitle] = useState('')
@@ -12,9 +13,11 @@ const NewBook = () => {
 
   const [createBook] = useMutation(CREATE_BOOK, 
     { update: (cache, response) => { 
-      cache.updateQuery({ query: ALL_BOOKS, variables: { genre: '' } }, ({ allBooks }) => {
-        return {
-          allBooks: allBooks.concat(response.data.addBook)
+      cache.updateQuery({query: ALL_BOOKS, variables: { genre: '' } }, (data) => {
+        if (data && data.allBooks) {
+          return {
+            allBooks: uniqByTitle(data.allBooks.concat(response.data.addBook))
+          }
         }
       })}})
 

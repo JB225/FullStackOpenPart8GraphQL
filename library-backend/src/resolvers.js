@@ -13,7 +13,22 @@ const resolvers = {
     authorCount: async () => Author.collection.countDocuments(),
     bookCount: async () => Book.collection.countDocuments(),
     allAuthors: async () => {
-      return Author.find({})
+      const authors = await Author.find({})
+      const books = await Book.find({})
+
+      const idBookCount = books.map((book) => book.author.toString())
+        .reduce((books, id) => { 
+          books[id] = (books[id] || 0) + 1
+          return books
+        }, [])
+
+      return authors.map((author) => { 
+        return { 
+          id: author._id, 
+          name: author.name, 
+          born: author.born, 
+          bookCount: (idBookCount[author._id.toString()] || 0)
+        }})
     },
     allBooks: async (root, args) =>  {
       if (!args.author && !args.genre) {
@@ -29,12 +44,6 @@ const resolvers = {
     },
     me: async (root, args, context) => context.currentUser
   },
-  Author: {
-    bookCount: async (root) => {
-      const author = await Author.findOne({ name: { $eq: root.name } })
-      return Book.find({ author: {$eq: author._id }}).countDocuments()
-    }
-  },
   Book: {
     author: async (root) => {
       return Author.findOne({ _id: root.author })
@@ -45,13 +54,23 @@ const resolvers = {
       let authorObj = await Author.findOne({ name: {$eq: args.author } })
       if (!authorObj) {
         authorObj = new Author({ name: args.author })
-        authorObj.save()
+        try {
+          await authorObj.save()
+        } catch (error) {
+          throw new GraphQLError('Saving author failed', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.name,
+              error
+            }
+          })
+        }      
       }
   
-      const book = new Book({ ...args, author: authorObj._id })
+      const book = new Book({ ...args, author: authorObj })
   
       try {
-        await book.save()
+        await book.save().catch
       } catch (error) {
         throw new GraphQLError('Saving book failed', {
           extensions: {
@@ -63,7 +82,6 @@ const resolvers = {
       }
 
       pubsub.publish('BOOK_ADDED', { bookAdded: book })
-  
       return book
     },
     addAuthor: async (root, args) => {
@@ -89,8 +107,17 @@ const resolvers = {
         return null
       }
       author.born = args.setBornTo
-      return author.save()
-    },
+      try {
+        await author.save()
+      } catch (error) {
+        throw new GraphQLError('Saving author failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.name,
+            error
+          }
+        })
+      }    },
     createUser: async (root, args) => {
       const user = new User({ username: args.username, favoriteGenre: args.favoriteGenre })
   
